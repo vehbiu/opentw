@@ -4,10 +4,10 @@ import React, { useState, useEffect, use, Suspense } from 'react';
 import { getBracket, getBrackets } from '@/lib/api';
 import { BracketData, Weight, Template, EventType } from '@/lib/types';
 import { BracketFrame } from './bracket-frame';
-import { 
-    ChevronDown, 
-    Eye, 
-    Loader2, 
+import {
+    ChevronDown,
+    Eye,
+    Loader2,
     Weight as WeightIcon,
     Layout,
     FileText,
@@ -61,7 +61,7 @@ const BracketSidebar = ({
                 {/* Header */}
                 <div className="flex items-center justify-between md:justify-start pb-3 border-b border-gray-100">
                     <h2 className="text-lg font-semibold text-gray-800">Bracket Options</h2>
-                    <button 
+                    <button
                         onClick={onCloseMobile}
                         className="md:hidden p-2 hover:bg-gray-100 rounded-full"
                     >
@@ -130,8 +130,8 @@ const BracketSidebar = ({
                             </label>
                             <div className="space-y-2 bg-gray-50 p-4 rounded-2xl border border-gray-200">
                                 {selectedTemplate.pages.map((page) => (
-                                    <label 
-                                        key={page.page_id} 
+                                    <label
+                                        key={page.page_id}
                                         className="flex items-center p-3 hover:bg-white rounded-lg transition-colors cursor-pointer group"
                                     >
                                         <input
@@ -232,7 +232,7 @@ export default function BracketViewer({
     // Handle page toggle
     const handlePageToggle = (pageId: number, checked: boolean) => {
         if (!selectedTemplate) return;
-        
+
         setSelectedTemplate({
             ...selectedTemplate,
             pages: selectedTemplate.pages.map(page =>
@@ -289,15 +289,13 @@ export default function BracketViewer({
     return (
         <div>
             {/* Mobile Header */}
-            <div className="md:hidden h-16 border-b border-gray-200 bg-white flex items-center px-4 fixed bottom-0 left-0 w-full z-10">
-                <button
-                    onClick={() => setIsMobileMenuOpen(true)}
-                    className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                    <MenuIcon size={24} className="text-gray-600" />
-                </button>
+            <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="md:hidden h-16 border-b border-gray-200 bg-white flex items-center px-4 fixed bottom-0 left-0 w-full z-10 p-2 hover:bg-gray-100"
+            >
+                <MenuIcon size={24} className="text-gray-600" />
                 <h1 className="ml-3 text-lg font-semibold text-gray-800">Tournament Bracket</h1>
-            </div>
+            </button>
 
             <div className="flex md:pt-4">
                 <BracketSidebar
