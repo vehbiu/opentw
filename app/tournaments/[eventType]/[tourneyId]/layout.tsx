@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Home } from "lucide-react";
+import { ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
 import { TournamentProvider } from "@/components/provider/tournament-provider";
 import { getTournamentInfo } from "@/lib/api";
@@ -7,10 +7,10 @@ import { EventType, Tournament } from "@/lib/types";
 
 type Params = {
     children: ReactNode;
-    params: {
+    params: Promise<{
         eventType: string;
         tourneyId: string;
-    };
+    }>;
 };
 
 const EventTypeLabel: Record<EventType, string> = {
