@@ -9,7 +9,7 @@ const Navbar = () => {
           <div className="flex flex-row justify-between w-full">
             <Link href="/" className="flex items-center">
               <Trophy className="h-6 w-6 text-blue-500" />
-              <span className="ml-2 text-xl underline underline-offset-2 text-gray-900">TrackWrestling Viewer</span>
+              <span className="ml-2 text-xl text-gray-900">TrackWrestling Viewer</span>
             </Link>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link 
