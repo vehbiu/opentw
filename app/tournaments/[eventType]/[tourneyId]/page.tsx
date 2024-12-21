@@ -16,7 +16,7 @@ import {
     Globe
 } from 'lucide-react';
 import { useTournament } from '@/components/provider/tournament-provider';
-import { getEventTypeDisplay } from '@/lib/utils';
+import { cn, getEventTypeDisplay } from '@/lib/utils';
 import Link from 'next/link';
 
 type Params = {
@@ -63,29 +63,38 @@ export default function TournamentDetailsPage({ params }: { params: Promise<Para
     }) => (
         <Link
             href={href || "#"}
-            className={`group flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-200 w-full
-                ${variant === "primary"
+            className={cn(
+                "group flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-200 w-full",
+                variant === "primary"
                     ? "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/20"
                     : variant === "secondary"
                         ? "bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 text-gray-800"
-                        : "border-2 border-gray-200 hover:border-gray-300 text-gray-800 bg-white"}`}
+                        : "border-2 border-gray-200 hover:border-gray-300 text-gray-800 bg-white"
+            )}
         >
-            <Icon className={`w-8 h-8 ${variant === "primary" ? "text-white" : "text-gray-500"}`} />
+            <Icon className={cn("w-8 h-8", variant === "primary" ? "text-white" : "text-gray-500")} />
             <div className="flex-1 text-left">
                 <div className="font-semibold">{label}</div>
                 {sublabel && <div className="text-sm opacity-80">{sublabel}</div>}
             </div>
-            <ChevronRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${variant === "primary" ? "text-white/70" : "text-gray-400"}`} />
+            <ChevronRight 
+                className={cn(
+                    "w-5 h-5 transition-transform group-hover:translate-x-1",
+                    variant === "primary" ? "text-white/70" : "text-gray-400"
+                )} />
+            {/* <ChevronRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${variant === "primary" ? "text-white/70" : "text-gray-400"}`} /> */}
         </Link>
     );
 
     const TabButton = ({ tab, label }: { tab: TabType; label: string }) => (
         <button
             onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 text-sm font-medium transition-all duration-200 relative
-                ${activeTab === tab
-                    ? 'text-blue-600 bg-blue-50 rounded-xl'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl'}`}
+            className={cn(
+                "px-6 py-3 text-sm font-medium transition-all duration-200 relative",
+                activeTab === tab
+                    ? "text-blue-600 bg-blue-50 rounded-xl"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
+            )}
         >
             {label}
         </button>

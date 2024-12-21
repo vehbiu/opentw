@@ -17,6 +17,7 @@ import { getMatches } from '@/lib/api';
 import { EventType } from '@/lib/types';
 import type { Match, Team } from '@/lib/types';
 import { useTournament } from '@/components/provider/tournament-provider';
+import { cn } from '@/lib/utils';
 
 type Params = {
   eventType: string;
@@ -242,7 +243,10 @@ export default function TournamentPage({ params }: { params: Promise<Params> }) 
                   {[match.wrestler1, match.wrestler2].map((wrestler, index) => (
                     <div 
                       key={wrestler.id}
-                      className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 ${getWrestlerBackgroundClass(wrestler.team.id)}`}
+                      className={cn(
+                        'flex items-center justify-between p-3 rounded-xl transition-all duration-200',
+                        getWrestlerBackgroundClass(wrestler.team.id)
+                      )}
                     >
                       <div>
                         <div className="font-medium text-gray-900">
@@ -283,9 +287,13 @@ export default function TournamentPage({ params }: { params: Promise<Params> }) 
       )}
 
       {/* Floating Refresh Button */}
-      <div className={`fixed bottom-0 left-0 right-0 p-4 bg-white bg-opacity-90 backdrop-blur-lg border-t border-gray-200 shadow-lg transform transition-all duration-300 ${
+      {/* <div className={`fixed bottom-0 left-0 right-0 p-4 bg-white bg-opacity-90 backdrop-blur-lg border-t border-gray-200 shadow-lg transform transition-all duration-300 ${
         showFloatingButton ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
-      }`}>
+      }`}> */}
+      <div className={cn(
+        'fixed bottom-0 left-0 right-0 p-4 bg-white bg-opacity-90 backdrop-blur-lg border-t border-gray-200 shadow-lg transform transition-all duration-300',
+        showFloatingButton ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
+      )}>
         <div className="max-w-7xl mx-auto">
           <button
             onClick={fetchMatches}

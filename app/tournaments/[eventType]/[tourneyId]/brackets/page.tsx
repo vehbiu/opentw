@@ -15,6 +15,7 @@ import {
     XIcon,
     AlertCircle
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Wrapper component for select inputs with icons
 const SelectWrapper = ({ children, icon: Icon }: { children: React.ReactNode; icon: React.ComponentType<any> }) => (
@@ -52,15 +53,10 @@ const BracketSidebar = ({
     onCloseMobile: () => void;
 }) => {
     return (
-        <div className={`
-            ${isMobileMenuOpen ? 'block' : 'hidden'} 
-            md:block fixed md:sticky z-20 w-full md:w-80 lg:w-96 
-            rounded-xl
-            max-h-fit
-            border-r border-gray-200 bg-white shadow-xl drop-shadow-md md:shadow-none
-            h-screen md:h-auto top-0 left-0 md:top-0
-            overflow-y-auto
-        `}>
+        <div className={cn(
+            "md:block fixed md:sticky z-20 w-full md:w-80 lg:w-96 rounded-xl max-h-fit border-r border-gray-200 bg-white shadow-xl drop-shadow-md md:shadow-none h-screen md:h-auto top-0 left-0 md:top-0 overflow-y-auto",
+            isMobileMenuOpen ? 'block' : 'hidden'
+        )}>
             <div className="p-4 space-y-4 flex flex-col md:max-h-[calc(100vh-2rem)] overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between md:justify-start pb-3 border-b border-gray-100">
