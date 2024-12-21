@@ -16,7 +16,7 @@ import {
     Globe
 } from 'lucide-react';
 import { useTournament } from '@/components/provider/tournament-provider';
-import { cn, getEventTypeDisplay } from '@/lib/utils';
+import { cn, getEventTypeDisplay, getLogoUrl } from '@/lib/utils';
 import Link from 'next/link';
 
 type Params = {
@@ -30,13 +30,6 @@ export default function TournamentDetailsPage({ params }: { params: Promise<Para
     const { tournament } = useTournament();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<TabType>('overview');
-
-    const getLogoUrl = (url: string) => {
-        if (url.startsWith('./')) {
-            return `https://www.trackwrestling.com${url.substring(1)}`;
-        }
-        return url;
-    };
 
     const formatDate = (date: Date | string | undefined) => {
         if (!date) return null;
@@ -82,7 +75,6 @@ export default function TournamentDetailsPage({ params }: { params: Promise<Para
                     "w-5 h-5 transition-transform group-hover:translate-x-1",
                     variant === "primary" ? "text-white/70" : "text-gray-400"
                 )} />
-            {/* <ChevronRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${variant === "primary" ? "text-white/70" : "text-gray-400"}`} /> */}
         </Link>
     );
 

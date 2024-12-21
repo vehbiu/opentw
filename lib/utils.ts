@@ -26,3 +26,13 @@ export function getEventTypeBadgeColor(type: EventType) {
 export function getEventTypeDisplay(type: EventType) {
     return type[0].toUpperCase() + type.slice(1);
 };
+
+export function getLogoUrl(url: string | null) {
+    if (!url) {
+        return 'https://via.placeholder.com/300x150?text=No+Logo';
+    }
+    if (url.startsWith('./')) {
+        return `https://www.trackwrestling.com${url.substring(1)}`;
+    }
+    return url;
+};

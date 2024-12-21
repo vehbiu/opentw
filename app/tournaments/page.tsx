@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, MouseEventHandler, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { Search, Calendar, MapPin, ExternalLink, RefreshCw } from 'lucide-react';
 import { EventType, Tournament } from '@/lib/types';
 import { queryTournaments } from '@/lib/api';
 import Link from 'next/link';
-import { cn, getEventTypeBadgeColor, getEventTypeDisplay } from '@/lib/utils';
+import { cn, getEventTypeBadgeColor, getEventTypeDisplay, getLogoUrl } from '@/lib/utils';
 
 export default function TournamentsPage() {
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -51,15 +51,6 @@ export default function TournamentsPage() {
         return parts.length > 0 ? parts.join(', ') : null;
     };
 
-    const getLogoUrl = (url: string | null) => {
-        if (!url) {
-            return 'https://via.placeholder.com/300x150?text=No+Logo';
-        }
-        if (url.startsWith('./')) {
-            return `https://www.trackwrestling.com${url.substring(1)}`;
-        }
-        return url;
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
