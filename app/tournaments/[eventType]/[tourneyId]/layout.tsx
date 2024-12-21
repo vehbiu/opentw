@@ -46,7 +46,7 @@ function Breadcrumb({ tournament }: { tournament: Tournament }) {
                 <span>{EventTypeLabel[tournament.event_type]}</span>
             </BreadcrumbItem> */}
             
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            {/* <ChevronRight className="w-4 h-4 text-gray-400" /> */}
 
             <BreadcrumbItem href={`/tournaments/${tournament.event_type}/${tournament.id}`}>
                 <span>{tournament.name}</span>
