@@ -13,13 +13,13 @@ type Params = {
     }>;
 };
 
-const EventTypeLabel: Record<EventType, string> = {
-    predefined: "Predefined Tournament",
-    open: "Open Tournament",
-    team: "Team Tournament",
-    freestyle: "Freestyle Tournament",
-    season: "Season Tournament"
-};
+// const EventTypeLabel: Record<EventType, string> = {
+//     predefined: "Predefined Tournament",
+//     open: "Open Tournament",
+//     team: "Team Tournament",
+//     freestyle: "Freestyle Tournament",
+//     season: "Season Tournament"
+// };
 
 function BreadcrumbItem({ href, children }: { href: string; children: ReactNode }) {
     return (
@@ -42,9 +42,9 @@ function Breadcrumb({ tournament }: { tournament: Tournament }) {
             
             <ChevronRight className="w-4 h-4 text-gray-400" />
             
-            <BreadcrumbItem href={`/tournaments/${tournament.event_type}`}>
+            {/* <BreadcrumbItem href={`/tournaments/${tournament.event_type}`}>
                 <span>{EventTypeLabel[tournament.event_type]}</span>
-            </BreadcrumbItem>
+            </BreadcrumbItem> */}
             
             <ChevronRight className="w-4 h-4 text-gray-400" />
 
