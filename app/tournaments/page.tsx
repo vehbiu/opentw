@@ -5,7 +5,7 @@ import { Search, Calendar, MapPin, ExternalLink, RefreshCw } from 'lucide-react'
 import { EventType, Tournament } from '@/lib/types';
 import { queryTournaments } from '@/lib/api';
 import Link from 'next/link';
-import { getEventTypeBadgeColor, getEventTypeDisplay } from '@/lib/utils';
+import { cn, getEventTypeBadgeColor, getEventTypeDisplay } from '@/lib/utils';
 
 export default function TournamentsPage() {
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -63,6 +63,15 @@ export default function TournamentsPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+            {/* Add Colors to TailwindCSS build */}
+            <div className="hidden absolute">
+                <div className="bg-purple-100 text-purple-800"></div>
+                <div className="bg-green-100 text-green-800"></div>
+                <div className="bg-blue-100 text-blue-800"></div>
+                <div className="bg-orange-100 text-orange-800"></div>
+                <div className="bg-pink-100 text-pink-800"></div>
+                <div className="bg-gray-100 text-gray-800"></div>
+            </div>
             <div className="max-w-7xl mx-auto">
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-gray-900">Tournaments</h1>
@@ -141,7 +150,10 @@ export default function TournamentsPage() {
                                             <h2 className="text-xl font-semibold text-gray-900 line-clamp-2">
                                                 {tournament.name}
                                             </h2>
-                                            <span className={`px-3 py-1 ${getEventTypeBadgeColor(tournament.event_type)} text-sm rounded-full whitespace-nowrap flex-shrink-0`}>
+                                            <span className={cn(
+                                                'px-3 py-1 text-sm rounded-full whitespace-nowrap flex-shrink-0',
+                                                getEventTypeBadgeColor(tournament.event_type)
+                                            )}>
                                                 {getEventTypeDisplay(tournament.event_type)}
                                             </span>
                                         </div>
