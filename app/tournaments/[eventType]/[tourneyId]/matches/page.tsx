@@ -188,7 +188,7 @@ export default function TournamentPage({ params }: { params: Promise<Params> }) 
               >
                 <option value="all">All Schools</option>
                 {uniqueSchools.map(school => (
-                  <option key={school.id} value={school.id}>{school.name}</option>
+                  <option key={school.id} value={school.id}>{school.name} {school.short_name}</option>
                 ))}
               </select>
             </div>
