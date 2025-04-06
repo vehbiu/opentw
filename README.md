@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OpenTW
 
-## Getting Started
+OpenTW is a modern, user-friendly frontend application for viewing and tracking wrestling tournament data from TrackWrestling. It provides real-time updates, clean bracket visualizations, and match notifications.
 
-First, run the development server:
+## Overview
 
-```bash
-npm run dev
+OpenTW connects to the [OpenTW API](https://github.com/vehbiu/opentw-api) to provide a superior user experience for wrestling tournament participants, coaches, and spectators. The application offers features like tournament search, live match tracking, and bracket visualization.
+
+## Features
+
+- User-friendly interface for viewing tournament information
+- Real-time match status updates
+- Clean, interactive bracket visualizations
+- Mobile-responsive design
+- Tournament search functionality
+- Notifications for match changes
+
+## Installation
+
+### Prerequisites
+- Node.js (v14+)
+- npm or yarn
+- Access to OpenTW API
+
+### Setup
+1. Clone the repository:
+   ```
+   git clone https://github.com/vehbiu/opentw.git
+   cd opentw
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Configure API endpoint:
+   Create a `.env` file in the root directory and add:
+   ```
+   REACT_APP_API_URL=https://opentw-api.vehbi.me
+   # or use your local API instance
+   # REACT_APP_API_URL=http://localhost:8000
+   ```
+
+4. Start the development server:
+   ```
+   npm start
+   # or
+   yarn start
+   ```
+
+The application will be available at `http://localhost:3000`.
+
+## Usage
+
+### Finding a Tournament
+1. Use the search bar to find tournaments by name, location, or date
+2. Select a tournament from the search results
+
+### Viewing Tournament Information
+- See general tournament details
+- View all weight classes
+- Check match schedules and mat assignments
+
+### Tracking Matches
+- See live match statuses
+- Receive notifications for status changes
+- Track specific wrestlers or weight classes
+
+### Viewing Brackets
+- Interactive bracket visualization
+- Results and advancement tracking
+- Printable bracket views
+
+## Deployment
+
+To build for production:
+```
+npm run build
 # or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+yarn build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The build artifacts will be stored in the `build/` directory.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Live Demo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+A live version of the application is available at: https://opentw.vehbi.me
 
-## Learn More
+## Related Projects
 
-To learn more about Next.js, take a look at the following resources:
+- [OpenTW API](https://github.com/vehbiu/opentw-api) - Backend API for this frontend
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+[MIT License](LICENSE)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contact
+
+For issues and contributions, please visit the [GitHub repository](https://github.com/vehbiu/opentw).
