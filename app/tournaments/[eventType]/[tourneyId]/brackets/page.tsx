@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Wrapper component for select inputs with icons
 const SelectWrapper = ({ children, icon: Icon }: { children: React.ReactNode; icon: React.ComponentType<any> }) => (
     <div className="relative">
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -28,7 +27,6 @@ const SelectWrapper = ({ children, icon: Icon }: { children: React.ReactNode; ic
     </div>
 );
 
-// Sidebar component with complete props
 const BracketSidebar = ({
     bracketData,
     selectedWeight,
@@ -170,7 +168,6 @@ const BracketSidebar = ({
     );
 };
 
-// Main component with all handlers and state management
 export default function BracketViewer({
     params
 }: {
@@ -185,7 +182,6 @@ export default function BracketViewer({
     const [loading, setLoading] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Initial data fetching
     useEffect(() => {
         const fetchBrackets = async () => {
             try {
@@ -193,7 +189,6 @@ export default function BracketViewer({
                 const data = await getBrackets(eventType, tourneyId.toString());
                 setBracketData(data);
 
-                // Auto-select first weight and template if available
                 if (data.weights.length > 0) {
                     setSelectedWeight(data.weights[0]);
                     const matchingTemplate = data.templates.find(
@@ -212,24 +207,20 @@ export default function BracketViewer({
         fetchBrackets();
     }, [eventType, tourneyId]);
 
-    // Handle weight class change
     const handleWeightChange = (weight: Weight) => {
         setSelectedWeight(weight);
-        // Reset template when weight changes
         const matchingTemplate = bracketData?.templates.find(
             t => t.bracket_id === weight.bracket_id
         );
         setSelectedTemplate(matchingTemplate || null);
-        setBracketHtml(null); // Clear current bracket view
+        setBracketHtml(null);
     };
 
-    // Handle template change
     const handleTemplateChange = (template: Template) => {
         setSelectedTemplate(template);
-        setBracketHtml(null); // Clear current bracket view
+        setBracketHtml(null);
     };
 
-    // Handle page toggle
     const handlePageToggle = (pageId: number, checked: boolean) => {
         if (!selectedTemplate) return;
 
@@ -241,7 +232,6 @@ export default function BracketViewer({
         });
     };
 
-    // Handle view bracket
     const handleViewBracket = async () => {
         if (!selectedWeight || !selectedTemplate) return;
 
@@ -263,7 +253,6 @@ export default function BracketViewer({
         }
     };
 
-    // Loading state
     if (!bracketData) {
         return (
             <div className="flex items-center justify-center h-screen bg-gray-50">
