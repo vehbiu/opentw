@@ -4,6 +4,7 @@ import Link from "next/link";
 import { TournamentProvider } from "@/components/provider/tournament-provider";
 import { getTournamentInfo } from "@/lib/api";
 import { EventType, Tournament } from "@/lib/types";
+import { parseDate } from "@/lib/utils";
 
 type Params = {
     children: ReactNode;
@@ -59,9 +60,9 @@ function Breadcrumb({ tournament }: { tournament: Tournament }) {
 
 function TournamentHeader({ tournament }: { tournament: Tournament }) {
     const dateRange = tournament.start_date && tournament.end_date
-        ? new Date(tournament.start_date).toLocaleDateString() + 
+        ? parseDate(tournament.start_date).toLocaleDateString() + 
           (tournament.end_date !== tournament.start_date 
-            ? ` - ${new Date(tournament.end_date).toLocaleDateString()}`
+            ? ` - ${parseDate(tournament.end_date).toLocaleDateString()}`
             : '')
         : null;
 

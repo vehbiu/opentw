@@ -6,7 +6,7 @@ import { Search, Calendar, MapPin, ExternalLink, RefreshCw, ArrowLeft } from 'lu
 import { EventType, Tournament } from '@/lib/types';
 import { queryTournaments } from '@/lib/api';
 import Link from 'next/link';
-import { getEventTypeBadgeColor, getEventTypeDisplay } from '@/lib/utils';
+import { getEventTypeBadgeColor, getEventTypeDisplay, parseDate } from '@/lib/utils';
 import { useParams } from 'next/navigation';
 
 const EVENT_TYPE_INFO: Record<EventType, { description: string; icon: string }> = {
@@ -64,7 +64,7 @@ export default function EventTypePage() {
     const filteredTournaments = tournaments.filter(tournament => {
         if (dateFilter === 'all') return true;
         const today = new Date();
-        const startDate = tournament.start_date ? new Date(tournament.start_date) : null;
+        const startDate = tournament.start_date ? parseDate(tournament.start_date) : null;
         if (dateFilter === 'upcoming') {
             return startDate ? startDate >= today : true;
         }
@@ -156,7 +156,7 @@ export default function EventTypePage() {
                                         <div className="flex items-center gap-2 text-gray-600">
                                             <Calendar className="w-5 h-5 flex-shrink-0" />
                                             <span className="text-sm">
-                                                {tournament.start_date && new Date(tournament.start_date).toLocaleDateString(undefined, {
+                                                {tournament.start_date && parseDate(tournament.start_date).toLocaleDateString(undefined, {
                                                     weekday: 'short',
                                                     month: 'short',
                                                     day: 'numeric'
@@ -164,7 +164,7 @@ export default function EventTypePage() {
                                                 {tournament.end_date && tournament.start_date !== tournament.end_date && (
                                                     <>
                                                         {" - "}
-                                                        {new Date(tournament.end_date).toLocaleDateString(undefined, {
+                                                        {parseDate(tournament.end_date).toLocaleDateString(undefined, {
                                                             weekday: 'short',
                                                             month: 'short',
                                                             day: 'numeric'

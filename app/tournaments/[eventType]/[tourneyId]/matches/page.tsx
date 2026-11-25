@@ -13,7 +13,7 @@ import {
   Users 
 } from 'lucide-react';
 import { parseAsInteger, parseAsString, useQueryState } from 'nuqs';
-import { getMatches } from '@/lib/api';
+import { errorMessage, getMatches } from '@/lib/api';
 import { EventType } from '@/lib/types';
 import type { Match, Team } from '@/lib/types';
 import { useTournament } from '@/components/provider/tournament-provider';
@@ -106,7 +106,7 @@ export default function TournamentPage({ params }: { params: Promise<Params> }) 
       setMatches(data);
       setError(null);
     } catch (err) {
-      setError('Failed to load match data');
+      setError(errorMessage(err, 'Failed to load match data'));
     } finally {
       setLoading(false);
     }
@@ -188,7 +188,7 @@ export default function TournamentPage({ params }: { params: Promise<Params> }) 
               >
                 <option value="all">All Schools</option>
                 {uniqueSchools.map(school => (
-                  <option key={school.id} value={school.id}>{school.name} {school.short_name}</option>
+                  <option key={school.id} value={school.id}>{school.name}{school.shortName ? ` (${school.shortName})` : ''}</option>
                 ))}
               </select>
             </div>

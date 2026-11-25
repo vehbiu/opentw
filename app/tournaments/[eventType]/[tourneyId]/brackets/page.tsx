@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, use, Suspense } from 'react';
-import { getBracket, getBrackets } from '@/lib/api';
-import { BracketData, Weight, Template, EventType } from '@/lib/types';
+import { errorMessage, getBracketHtml, getBracketSheet, getBrackets } from '@/lib/api';
+import { BracketData, BracketSheet, Weight, Template, EventType } from '@/lib/types';
+import { useTournament } from '@/components/provider/tournament-provider';
 import { BracketFrame } from './bracket-frame';
+import { BracketSheetView } from './bracket-sheet';
 import {
     ChevronDown,
     Eye,
@@ -37,7 +39,8 @@ const BracketSidebar = ({
     onViewClick,
     isMobileMenuOpen,
     loading,
-    onCloseMobile
+    onCloseMobile,
+    usesTemplates
 }: {
     bracketData: BracketData;
     selectedWeight: Weight | null;
@@ -49,7 +52,20 @@ const BracketSidebar = ({
     isMobileMenuOpen: boolean;
     loading: boolean;
     onCloseMobile: () => void;
+    /** TrackWrestling brackets are drawn from a template and pages; FloWrestling's aren't. */
+    usesTemplates: boolean;
 }) => {
+    // Open tournaments group weights by division.
+    const divisionNames = new Map(bracketData.divisions.map(d => [String(d.division_id), d.division_name]));
+    const groups = new Map<string, Weight[]>();
+    for (const w of bracketData.weights) {
+        const key = w.division_id != null ? divisionNames.get(String(w.division_id)) ?? '' : '';
+        groups.set(key, [...(groups.get(key) ?? []), w]);
+    }
+    const weightOption = (w: Weight) => (
+        <option key={w.weight_index} value={w.weight_index}>{w.weight_name}</option>
+    );
+
     return (
         <div className={cn(
             "md:block fixed md:sticky z-20 w-full md:w-80 lg:w-96 rounded-xl max-h-fit border-r border-gray-200 bg-white shadow-xl drop-shadow-md md:shadow-none h-screen md:h-auto top-0 left-0 md:top-0 overflow-y-auto",
@@ -84,16 +100,18 @@ const BracketSidebar = ({
                                 }}
                             >
                                 <option value="" disabled>Select Weight Class</option>
-                                {bracketData.weights.map((w) => (
-                                    <option key={w.weight_index} value={w.weight_index}>
-                                        {w.weight_name}
-                                    </option>
-                                ))}
+                                {groups.size > 1 || !groups.has('')
+                                    ? Array.from(groups, ([division, weights]) => (
+                                        <optgroup key={division} label={division || 'Other'}>
+                                            {weights.map(weightOption)}
+                                        </optgroup>
+                                    ))
+                                    : bracketData.weights.map(weightOption)}
                             </select>
                         </SelectWrapper>
                     </div>
 
-                    {selectedWeight && (
+                    {usesTemplates && selectedWeight && (
                         <div>
                             <label className="inline-flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
                                 <Layout size={16} className="text-gray-400" />
@@ -104,14 +122,14 @@ const BracketSidebar = ({
                                     className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                     value={selectedTemplate?.template_index ?? ''}
                                     onChange={(e) => {
-                                        const template = bracketData.templates[parseInt(e.target.value)];
+                                        const template = bracketData.templates.find(t => t.template_index === parseInt(e.target.value));
                                         if (template) onTemplateChange(template);
                                     }}
                                 >
                                     {bracketData.templates
                                         .filter(t => t.bracket_id === selectedWeight.bracket_id)
                                         .map((t) => (
-                                            <option key={t.template_id} value={t.template_id}>
+                                            <option key={t.template_index} value={t.template_index}>
                                                 {t.template_name}
                                             </option>
                                         ))}
@@ -120,7 +138,7 @@ const BracketSidebar = ({
                         </div>
                     )}
 
-                    {selectedTemplate && (
+                    {usesTemplates && selectedTemplate && (
                         <div>
                             <label className="inline-flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-3">
                                 <FileText size={16} className="text-gray-400" />
@@ -152,7 +170,7 @@ const BracketSidebar = ({
                 <div className="pt-4 border-t border-gray-100">
                     <button
                         onClick={onViewClick}
-                        disabled={!selectedWeight || !selectedTemplate || loading}
+                        disabled={!selectedWeight || (usesTemplates && !selectedTemplate) || loading}
                         className="w-full p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2 shadow-sm"
                     >
                         {loading ? (
@@ -174,10 +192,13 @@ export default function BracketViewer({
     params: Promise<{ eventType: EventType; tourneyId: string | number; }>
 }) {
     const { eventType, tourneyId } = use(params);
+    const { tournament } = useTournament();
+    const usesTemplates = tournament.source !== 'flowrestling';
     const [bracketData, setBracketData] = useState<BracketData | null>(null);
     const [selectedWeight, setSelectedWeight] = useState<Weight | null>(null);
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
     const [bracketHtml, setBracketHtml] = useState<string | null>(null);
+    const [bracketSheet, setBracketSheet] = useState<BracketSheet | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -195,9 +216,10 @@ export default function BracketViewer({
                         t => t.bracket_id === data.weights[0].bracket_id
                     );
                     if (matchingTemplate) setSelectedTemplate(matchingTemplate);
+                    if (!usesTemplates) await loadBracket(data.weights[0], null);
                 }
             } catch (err) {
-                setError('Failed to load brackets');
+                setError(errorMessage(err, 'Failed to load brackets'));
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -205,7 +227,8 @@ export default function BracketViewer({
         };
 
         fetchBrackets();
-    }, [eventType, tourneyId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [eventType, tourneyId, usesTemplates]);
 
     const handleWeightChange = (weight: Weight) => {
         setSelectedWeight(weight);
@@ -214,6 +237,9 @@ export default function BracketViewer({
         );
         setSelectedTemplate(matchingTemplate || null);
         setBracketHtml(null);
+        setBracketSheet(null);
+        // FloWrestling brackets need no options beyond the weight, so show them straight away.
+        if (!usesTemplates) loadBracket(weight, null);
     };
 
     const handleTemplateChange = (template: Template) => {
@@ -232,25 +258,33 @@ export default function BracketViewer({
         });
     };
 
-    const handleViewBracket = async () => {
-        if (!selectedWeight || !selectedTemplate) return;
-
+    const loadBracket = async (weight: Weight, template: Template | null) => {
         try {
             setLoading(true);
-            const html = await getBracket(
-                eventType,
-                tourneyId.toString(),
-                selectedWeight.weight_id,
-                selectedTemplate.pages.filter(p => p.show_page).map(p => p.page_id)
-            );
-            setBracketHtml(html);
+            setError(null);
+            if (usesTemplates) {
+                if (!template) return;
+                const html = await getBracketHtml(
+                    eventType,
+                    tourneyId.toString(),
+                    weight.weight_id,
+                    template.pages.filter(p => p.show_page).map(p => p.page_id)
+                );
+                setBracketHtml(html);
+            } else {
+                setBracketSheet(await getBracketSheet(eventType, tourneyId.toString(), weight.bracket_id));
+            }
             setIsMobileMenuOpen(false); // Close mobile menu after viewing
         } catch (err) {
-            setError('Failed to load bracket');
+            setError(errorMessage(err, 'Failed to load bracket'));
             console.error(err);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleViewBracket = () => {
+        if (selectedWeight) loadBracket(selectedWeight, selectedTemplate);
     };
 
     if (!bracketData) {
@@ -298,6 +332,7 @@ export default function BracketViewer({
                     isMobileMenuOpen={isMobileMenuOpen}
                     loading={loading}
                     onCloseMobile={() => setIsMobileMenuOpen(false)}
+                    usesTemplates={usesTemplates}
                 />
 
                 <div className="flex-1 p-4 pt-0 overflow-auto drop-shadow-md">
@@ -306,7 +341,19 @@ export default function BracketViewer({
                             <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
                         </div>
                     }>
-                        {bracketHtml ? (
+                        {error && (
+                            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-3 text-red-600">
+                                <AlertCircle size={20} />
+                                <p className="font-medium">{error}</p>
+                            </div>
+                        )}
+                        {!usesTemplates && bracketSheet ? (
+                            <BracketSheetView sheet={bracketSheet} />
+                        ) : !usesTemplates && loading ? (
+                            <div className="h-64 flex items-center justify-center bg-white rounded-xl shadow-sm">
+                                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+                            </div>
+                        ) : usesTemplates && bracketHtml ? (
                             <div className="h-full rounded-xl overflow-hidden shadow-sm">
                                 <BracketFrame frameInnerHtml={bracketHtml} />
                             </div>

@@ -3,7 +3,7 @@ type EventType = "predefined" | "open" | "team" | "freestyle" | "season";
 interface Team {
     id: string;
     name: string;
-    short_name: string;
+    shortName: string;
 }
 
 interface Wrestler {
@@ -42,7 +42,15 @@ interface Tournament {
     logo_url?: string;
     event_flyer_url?: string;
     website_url?: string;
+    venue_street?: string;
+    registration_url?: string;
+    /** "flowrestling" when TrackWrestling has handed the tournament over to FloWrestling. */
+    source: TournamentSource;
+    flowrestling_event_id?: string;
+    flowrestling_url?: string;
 }
+
+type TournamentSource = "trackwrestling" | "flowrestling";
 
 
 // @dataclass
@@ -83,6 +91,8 @@ interface Template {
     bracket_height: number;
     bracket_font: number;
     pages: BracketPage[];
+    /** Freestyle tournaments only. */
+    bracket_rows?: number | null;
     // templateIndex: number;
     // bracketId: number;
     // templateId: number;
@@ -93,11 +103,22 @@ interface Template {
     // pages: BracketPage[];
 }
 
+// FloWrestling ids are strings; TrackWrestling's are numbers.
+type Id = number | string;
+
+interface Division {
+    division_index: number;
+    division_id: Id;
+    division_name: string;
+}
+
 interface Weight {
     weight_index: number;
-    weight_id: number;
+    weight_id: Id;
     weight_name: string;
-    bracket_id: number;
+    bracket_id: Id;
+    /** Open tournaments only. */
+    division_id?: Id | null;
     // weightIndex: number;
     // weightId: string;
     // weightName: string;
@@ -105,16 +126,65 @@ interface Weight {
 }
 
 interface BracketType {
-    bracketId: number;
+    bracket_id: number;
     // defaultTemplateIndex?: number;
     default_template_index?: number;
 }
 
 interface BracketData {
+    divisions: Division[];
     weights: Weight[];
     templates: Template[];
     bracket_types: BracketType[];
 }
 
-export type { Team, Wrestler, Match, Tournament, EventType, Weight, BracketType, BracketPage, Template, BracketData };
+/** One side of a FloWrestling bracket bout: a wrestler, or a team in team brackets. */
+interface BracketSide {
+    id: string | null;
+    name: string;
+    team?: string | null;
+    team_abbreviation?: string | null;
+    seed?: number | null;
+    score?: number | null;
+    winner: boolean;
+}
+
+interface BracketBout {
+    id: string;
+    bout_number: string | null;
+    round: string | null;
+    mat: string | null;
+    state: string | null;
+    result: string | null;
+    win_type: string | null;
+    time: string | null;
+    top: BracketSide | null;
+    bottom: BracketSide | null;
+    winner_to?: string | null;
+    loser_to?: string | null;
+    x?: number | null;
+    y?: number | null;
+}
+
+interface Placement {
+    place: number;
+    name: string;
+    team?: string | null;
+    id?: string | null;
+}
+
+/** A whole bracket as data; FloWrestling tournaments only (TrackWrestling brackets are HTML). */
+interface BracketSheet {
+    id: string;
+    name: string;
+    participant_type: string | null;
+    wrestler_count: number | null;
+    bouts: BracketBout[];
+    placements: Placement[];
+}
+
+export type {
+    Team, Wrestler, Match, Tournament, TournamentSource, EventType, Id, Division, Weight, BracketType,
+    BracketPage, Template, BracketData, BracketSide, BracketBout, Placement, BracketSheet,
+};
 

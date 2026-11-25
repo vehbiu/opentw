@@ -36,3 +36,13 @@ export function getLogoUrl(url: string | null) {
     }
     return url;
 };
+
+/**
+ * The API sends dates as "YYYY-MM-DD". `new Date()` reads those as midnight UTC, which shows
+ * the day before anywhere west of UTC, so read them as local dates instead.
+ */
+export function parseDate(value: string | Date): Date {
+    if (value instanceof Date) return value;
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    return match ? new Date(+match[1], +match[2] - 1, +match[3]) : new Date(value);
+}

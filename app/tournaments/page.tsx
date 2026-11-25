@@ -5,7 +5,7 @@ import { Search, Calendar, MapPin, ExternalLink, RefreshCw } from 'lucide-react'
 import { EventType, Tournament } from '@/lib/types';
 import { queryTournaments } from '@/lib/api';
 import Link from 'next/link';
-import { cn, getEventTypeBadgeColor, getEventTypeDisplay, getLogoUrl } from '@/lib/utils';
+import { cn, getEventTypeBadgeColor, getEventTypeDisplay, getLogoUrl, parseDate } from '@/lib/utils';
 
 export default function TournamentsPage() {
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -154,7 +154,7 @@ export default function TournamentsPage() {
                                         <div className="flex items-center gap-2 text-gray-600">
                                             <Calendar className="w-5 h-5 flex-shrink-0" />
                                             <span className="text-sm">
-                                                {tournament.start_date && new Date(tournament.start_date).toLocaleDateString(undefined, {
+                                                {tournament.start_date && parseDate(tournament.start_date).toLocaleDateString(undefined, {
                                                     weekday: 'short',
                                                     month: 'short',
                                                     day: 'numeric'
@@ -162,7 +162,7 @@ export default function TournamentsPage() {
                                                 {tournament.end_date && (
                                                     <>
                                                         {tournament.start_date ? " - " : "Ends "}
-                                                        {new Date(tournament.end_date).toLocaleDateString(undefined, {
+                                                        {parseDate(tournament.end_date).toLocaleDateString(undefined, {
                                                             day: 'numeric',
                                                             weekday: 'short',
                                                             month: 'short',

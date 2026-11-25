@@ -16,7 +16,7 @@ import {
     Globe
 } from 'lucide-react';
 import { useTournament } from '@/components/provider/tournament-provider';
-import { cn, getEventTypeDisplay, getLogoUrl } from '@/lib/utils';
+import { cn, getEventTypeDisplay, getLogoUrl, parseDate } from '@/lib/utils';
 import Link from 'next/link';
 
 type Params = {
@@ -33,7 +33,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<Para
 
     const formatDate = (date: Date | string | undefined) => {
         if (!date) return null;
-        return new Date(date).toLocaleDateString(undefined, {
+        return parseDate(date).toLocaleDateString(undefined, {
             weekday: 'short',
             year: 'numeric',
             month: 'short',
@@ -56,6 +56,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<Para
     }) => (
         <Link
             href={href || "#"}
+            {...(href?.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
             className={cn(
                 "group flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-200 w-full",
                 variant === "primary"
@@ -105,10 +106,21 @@ export default function TournamentDetailsPage({ params }: { params: Promise<Para
         );
     };
 
-    const isUpcoming = tournament.start_date ? new Date(tournament.start_date) > new Date() : false;
-    const isPassed = tournament.end_date ? new Date(tournament.end_date) < new Date() : false;
+    const now = new Date();
+    const isUpcoming = tournament.start_date ? parseDate(tournament.start_date) > now : false;
+    // One-day tournaments have no end date. Either way it runs until the end of its last day.
+    const lastDay = tournament.end_date || tournament.start_date;
+    const dayAfter = lastDay ? parseDate(lastDay) : null;
+    dayAfter?.setDate(dayAfter.getDate() + 1);
+    const isPassed = dayAfter ? dayAfter <= now : false;
     const status = isUpcoming ? 'Upcoming' : isPassed ? 'Over' : 'In Progress';
-    const statusColor = isUpcoming ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800';
+    const statusColor = isUpcoming ? 'bg-emerald-100 text-emerald-800' : isPassed ? 'bg-gray-100 text-gray-700' : 'bg-blue-100 text-blue-800';
+    const isFlo = tournament.source === 'flowrestling';
+    const address = [
+        tournament.venue_street,
+        tournament.venue_city,
+        [tournament.venue_state, tournament.venue_zip].filter(Boolean).join(' '),
+    ].filter(Boolean).join(', ');
 
     return (
         <div className="space-y-8">
@@ -137,6 +149,11 @@ export default function TournamentDetailsPage({ params }: { params: Promise<Para
                         <span className="px-4 py-1.5 text-sm font-medium bg-gray-100 text-gray-800 rounded-full">
                             {getEventTypeDisplay(tournament.event_type)}
                         </span>
+                        {isFlo && (
+                            <span className="px-4 py-1.5 text-sm font-medium bg-amber-50 text-amber-800 rounded-full">
+                                Via FloWrestling
+                            </span>
+                        )}
                     </div>
 
                     {/* Title & Location */}
@@ -179,8 +196,26 @@ export default function TournamentDetailsPage({ params }: { params: Promise<Para
             </div>
 
             {/* Secondary Actions */}
-            {(tournament.event_flyer_url || tournament.website_url) && (
+            {(tournament.event_flyer_url || tournament.website_url || tournament.registration_url || tournament.flowrestling_url) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {tournament.registration_url && (
+                        <QuickActionButton
+                            icon={LinkIcon}
+                            label="Registration"
+                            sublabel="Pre-register for this tournament"
+                            href={tournament.registration_url}
+                            variant="outline"
+                        />
+                    )}
+                    {tournament.flowrestling_url && (
+                        <QuickActionButton
+                            icon={ExternalLink}
+                            label="FloWrestling"
+                            sublabel="View this event on FloWrestling"
+                            href={tournament.flowrestling_url}
+                            variant="outline"
+                        />
+                    )}
                     {tournament.event_flyer_url && (
                         <QuickActionButton
                             icon={ExternalLink}
@@ -264,14 +299,18 @@ export default function TournamentDetailsPage({ params }: { params: Promise<Para
                                     <h3 className="font-bold text-lg text-gray-900">Venue Information</h3>
                                     <div className="bg-gray-50 rounded-xl p-4">
                                         <p className="text-gray-900 font-medium">{tournament.venue_name}</p>
-                                        {(tournament.venue_city || tournament.venue_state) && (
-                                            <p className="text-gray-600 mt-1">
-                                                {[
-                                                    tournament.venue_city,
-                                                    tournament.venue_state,
-                                                    tournament.venue_zip
-                                                ].filter(Boolean).join(', ')}
-                                            </p>
+                                        {address && (
+                                            <p className="text-gray-600 mt-1">{address}</p>
+                                        )}
+                                        {address && (
+                                            <a
+                                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([tournament.venue_name, address].join(', '))}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 mt-2 text-sm text-blue-600 hover:text-blue-800"
+                                            >
+                                                <MapPin className="w-4 h-4" /> Open in Maps
+                                            </a>
                                         )}
                                     </div>
                                 </div>
