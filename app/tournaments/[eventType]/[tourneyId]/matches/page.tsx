@@ -78,7 +78,8 @@ export default function TournamentPage({ params }: { params: Promise<Params> }) 
     const schools: Team[] = [];
     matches.forEach(match => {
       [match.wrestler1.team, match.wrestler2.team].forEach(team => {
-        if (!schoolSet.has(team.id)) {
+        // A slot still waiting on a result has no team.
+        if (team.id && !schoolSet.has(team.id)) {
           schoolSet.add(team.id);
           schools.push(team);
         }
@@ -242,7 +243,7 @@ export default function TournamentPage({ params }: { params: Promise<Params> }) 
                 <div className="space-y-3">
                   {[match.wrestler1, match.wrestler2].map((wrestler, index) => (
                     <div 
-                      key={wrestler.id}
+                      key={`${index}-${wrestler.id}`}
                       className={cn(
                         'flex items-center justify-between p-3 rounded-xl transition-all duration-200',
                         getWrestlerBackgroundClass(wrestler.team.id)
