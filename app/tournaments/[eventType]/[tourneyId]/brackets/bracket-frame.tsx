@@ -3,7 +3,7 @@ const CUSTOM_STYLES = `
 /* Tournament Theme */
 :root {
   --background: #ffffff;
-  --primary: #1e3a8a;  /* Deep navy */
+  --primary: #13294B;  /* Mat navy, as the rest of the site */
   --text: #1f2937;
   --border: #cbd5e1;
   --hover-bg: #f8fafc;

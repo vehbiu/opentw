@@ -1,22 +1,28 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Barlow, Barlow_Condensed } from "next/font/google";
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import "./globals.css";
 import Navbar from "@/components/navbar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const body = Barlow({
+  variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const display = Barlow_Condensed({
+  variable: "--font-display",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "TrackWrestling Viewer",
-  description: "An easier way to view TrackWrestling tournaments",
+  title: "OpenTW",
+  description: "Wrestling tournaments, mat schedules and brackets from TrackWrestling and FloWrestling.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#13294B",
 };
 
 export default function RootLayout({
@@ -26,13 +32,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full flex flex-col`}
-      >
-        <Navbar />
+      <body className={`${body.variable} ${display.variable} antialiased min-h-full flex flex-col`}>
         <NuqsAdapter>
-          <main className="flex-1 bg-gradient-to-b from-gray-50 to-gray-100">
-              {children}
+          <Navbar />
+          <main className="flex-1">
+            {children}
           </main>
         </NuqsAdapter>
       </body>

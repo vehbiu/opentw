@@ -2,21 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer base {
+  body {
+    @apply bg-paper text-ink font-sans overflow-y-scroll;
+    font-feature-settings: "tnum" 1;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :focus-visible {
+    @apply outline-none ring-2 ring-mat-400 ring-offset-2 ring-offset-paper;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  @apply overflow-y-scroll;
+@layer components {
+  .field {
+    @apply h-11 w-full rounded-md border border-line bg-white px-3 text-ink placeholder:text-ink-faint
+      focus:border-mat-400 focus:outline-none focus:ring-2 focus:ring-mat-100;
+  }
+
+  /* A pill that can be switched on, for filters and weight classes. */
+  .chip {
+    @apply inline-flex h-9 shrink-0 items-center rounded-full border border-line bg-white px-3.5 text-sm font-medium text-ink-soft
+      transition-colors hover:border-mat-400 hover:text-ink;
+  }
+  .chip[aria-pressed="true"], .chip[aria-current="true"] {
+    @apply border-mat bg-mat text-white;
+  }
 }

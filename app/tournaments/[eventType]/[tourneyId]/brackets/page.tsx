@@ -1,192 +1,68 @@
 'use client';
 
-import React, { useState, useEffect, use, Suspense } from 'react';
+import React, { use, useEffect, useMemo, useState } from 'react';
+import { parseAsString, useQueryState } from 'nuqs';
+import { Loader2, SlidersHorizontal } from 'lucide-react';
 import { errorMessage, getBracketHtml, getBracketSheet, getBrackets } from '@/lib/api';
-import { BracketData, BracketSheet, Weight, Template, EventType } from '@/lib/types';
+import type { BracketData, BracketSheet, EventType, Template, Weight } from '@/lib/types';
 import { useTournament } from '@/components/provider/tournament-provider';
+import { cn } from '@/lib/utils';
 import { BracketFrame } from './bracket-frame';
 import { BracketSheetView } from './bracket-sheet';
-import {
-    ChevronDown,
-    Eye,
-    Loader2,
-    Weight as WeightIcon,
-    Layout,
-    FileText,
-    MenuIcon,
-    XIcon,
-    AlertCircle
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
 
-const SelectWrapper = ({ children, icon: Icon }: { children: React.ReactNode; icon: React.ComponentType<any> }) => (
-    <div className="relative">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <Icon size={18} />
-        </div>
-        {children}
-        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-    </div>
-);
-
-const BracketSidebar = ({
-    bracketData,
-    selectedWeight,
-    selectedTemplate,
-    onWeightChange,
-    onTemplateChange,
-    onPageToggle,
-    onViewClick,
-    isMobileMenuOpen,
-    loading,
-    onCloseMobile,
-    usesTemplates
-}: {
-    bracketData: BracketData;
-    selectedWeight: Weight | null;
-    selectedTemplate: Template | null;
-    onWeightChange: (weight: Weight) => void;
-    onTemplateChange: (template: Template) => void;
-    onPageToggle: (pageId: number, checked: boolean) => void;
-    onViewClick: () => void;
-    isMobileMenuOpen: boolean;
-    loading: boolean;
-    onCloseMobile: () => void;
-    /** TrackWrestling brackets are drawn from a template and pages; FloWrestling's aren't. */
-    usesTemplates: boolean;
-}) => {
-    // Open tournaments group weights by division.
-    const divisionNames = new Map(bracketData.divisions.map(d => [String(d.division_id), d.division_name]));
-    const groups = new Map<string, Weight[]>();
-    for (const w of bracketData.weights) {
-        const key = w.division_id != null ? divisionNames.get(String(w.division_id)) ?? '' : '';
-        groups.set(key, [...(groups.get(key) ?? []), w]);
-    }
-    const weightOption = (w: Weight) => (
-        <option key={w.weight_index} value={w.weight_index}>{w.weight_name}</option>
-    );
-
+/** TrackWrestling draws a bracket from a template, split into pages you can turn on and off. */
+function LayoutOptions({ templates, template, onTemplate }: {
+    templates: Template[];
+    template: Template;
+    onTemplate: (t: Template) => void;
+}) {
     return (
-        <div className={cn(
-            "md:block fixed md:sticky z-20 w-full md:w-80 lg:w-96 rounded-xl max-h-fit border-r border-gray-200 bg-white shadow-xl drop-shadow-md md:shadow-none h-screen md:h-auto top-0 left-0 md:top-0 overflow-y-auto",
-            isMobileMenuOpen ? 'block' : 'hidden'
-        )}>
-            <div className="p-4 space-y-4 flex flex-col md:max-h-[calc(100vh-2rem)] overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between md:justify-start pb-3 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-800">Bracket Options</h2>
-                    <button
-                        onClick={onCloseMobile}
-                        className="md:hidden p-2 hover:bg-gray-100 rounded-full"
-                    >
-                        <XIcon size={20} className="text-gray-500" />
-                    </button>
-                </div>
-
-                {/* Options */}
-                <div className="space-y-4 flex-grow overflow-y-auto rounded-2xl">
-                    <div>
-                        <label className="inline-flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
-                            <WeightIcon size={16} className="text-gray-400" />
-                            <span>Weight Class</span>
-                        </label>
-                        <SelectWrapper icon={WeightIcon}>
-                            <select
-                                className="w-full h-10 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-2xl appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                value={selectedWeight?.weight_index ?? ''}
-                                onChange={(e) => {
-                                    const weight = bracketData.weights[parseInt(e.target.value)];
-                                    if (weight) onWeightChange(weight);
-                                }}
+        <details className="group mt-3 rounded-lg border border-line bg-white">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-sm font-medium text-ink-soft hover:text-ink">
+                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                Bracket layout: {template.template_name}
+            </summary>
+            <div className="flex flex-col gap-4 border-t border-line px-4 py-3 sm:flex-row sm:items-start">
+                {templates.length > 1 && (
+                    <label className="sm:w-64">
+                        <span className="mb-1 block text-sm font-medium">Layout</span>
+                        <select
+                            className="field h-9 text-sm"
+                            value={template.template_index}
+                            onChange={e => {
+                                const t = templates.find(x => x.template_index === parseInt(e.target.value));
+                                if (t) onTemplate(t);
+                            }}
+                        >
+                            {templates.map(t => <option key={t.template_index} value={t.template_index}>{t.template_name}</option>)}
+                        </select>
+                    </label>
+                )}
+                <fieldset>
+                    <legend className="mb-1 text-sm font-medium">Pages</legend>
+                    <div className="flex flex-wrap gap-2">
+                        {template.pages.map(page => (
+                            <button
+                                key={page.page_id}
+                                type="button"
+                                className="chip"
+                                aria-pressed={page.show_page}
+                                onClick={() => onTemplate({
+                                    ...template,
+                                    pages: template.pages.map(p => p.page_id === page.page_id ? { ...p, show_page: !p.show_page } : p),
+                                })}
                             >
-                                <option value="" disabled>Select Weight Class</option>
-                                {groups.size > 1 || !groups.has('')
-                                    ? Array.from(groups, ([division, weights]) => (
-                                        <optgroup key={division} label={division || 'Other'}>
-                                            {weights.map(weightOption)}
-                                        </optgroup>
-                                    ))
-                                    : bracketData.weights.map(weightOption)}
-                            </select>
-                        </SelectWrapper>
+                                {page.page_name}
+                            </button>
+                        ))}
                     </div>
-
-                    {usesTemplates && selectedWeight && (
-                        <div>
-                            <label className="inline-flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
-                                <Layout size={16} className="text-gray-400" />
-                                <span>Template</span>
-                            </label>
-                            <SelectWrapper icon={Layout}>
-                                <select
-                                    className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                    value={selectedTemplate?.template_index ?? ''}
-                                    onChange={(e) => {
-                                        const template = bracketData.templates.find(t => t.template_index === parseInt(e.target.value));
-                                        if (template) onTemplateChange(template);
-                                    }}
-                                >
-                                    {bracketData.templates
-                                        .filter(t => t.bracket_id === selectedWeight.bracket_id)
-                                        .map((t) => (
-                                            <option key={t.template_index} value={t.template_index}>
-                                                {t.template_name}
-                                            </option>
-                                        ))}
-                                </select>
-                            </SelectWrapper>
-                        </div>
-                    )}
-
-                    {usesTemplates && selectedTemplate && (
-                        <div>
-                            <label className="inline-flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-3">
-                                <FileText size={16} className="text-gray-400" />
-                                <span>Pages to Display</span>
-                            </label>
-                            <div className="space-y-2 bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                                {selectedTemplate.pages.map((page) => (
-                                    <label
-                                        key={page.page_id}
-                                        className="flex items-center p-3 hover:bg-white rounded-lg transition-colors cursor-pointer group"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={page.show_page}
-                                            onChange={(e) => onPageToggle(page.page_id, e.target.checked)}
-                                            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-md transition-all"
-                                        />
-                                        <span className="ml-3 text-sm text-gray-700 font-medium group-hover:text-gray-900">
-                                            {page.page_name}
-                                        </span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Footer Button */}
-                <div className="pt-4 border-t border-gray-100">
-                    <button
-                        onClick={onViewClick}
-                        disabled={!selectedWeight || (usesTemplates && !selectedTemplate) || loading}
-                        className="w-full p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2 shadow-sm"
-                    >
-                        {loading ? (
-                            <Loader2 className="animate-spin" size={20} />
-                        ) : (
-                            <Eye size={20} />
-                        )}
-                        <span className="font-medium">{loading ? 'Loading...' : 'View Bracket'}</span>
-                    </button>
-                </div>
+                </fieldset>
             </div>
-        </div>
+        </details>
     );
-};
+}
 
-export default function BracketViewer({
+export default function BracketsPage({
     params
 }: {
     params: Promise<{ eventType: EventType; tourneyId: string | number; }>
@@ -194,183 +70,138 @@ export default function BracketViewer({
     const { eventType, tourneyId } = use(params);
     const { tournament } = useTournament();
     const usesTemplates = tournament.source !== 'flowrestling';
-    const [bracketData, setBracketData] = useState<BracketData | null>(null);
-    const [selectedWeight, setSelectedWeight] = useState<Weight | null>(null);
-    const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
-    const [bracketHtml, setBracketHtml] = useState<string | null>(null);
-    const [bracketSheet, setBracketSheet] = useState<BracketSheet | null>(null);
+
+    const [data, setData] = useState<BracketData | null>(null);
+    const [weightId, setWeightId] = useQueryState('weight', parseAsString);
+    const [division, setDivision] = useState<string | null>(null);
+    const [template, setTemplate] = useState<Template | null>(null);
+    const [sheet, setSheet] = useState<BracketSheet | null>(null);
+    const [html, setHtml] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
-        const fetchBrackets = async () => {
-            try {
-                setLoading(true);
-                const data = await getBrackets(eventType, tourneyId.toString());
-                setBracketData(data);
+        getBrackets(eventType, tourneyId.toString())
+            .then(setData)
+            .catch(err => setError(errorMessage(err, 'Could not load the brackets.')))
+            .finally(() => setLoading(false));
+    }, [eventType, tourneyId]);
 
-                if (data.weights.length > 0) {
-                    setSelectedWeight(data.weights[0]);
-                    const matchingTemplate = data.templates.find(
-                        t => t.bracket_id === data.weights[0].bracket_id
-                    );
-                    if (matchingTemplate) setSelectedTemplate(matchingTemplate);
-                    if (!usesTemplates) await loadBracket(data.weights[0], null);
-                }
-            } catch (err) {
-                setError(errorMessage(err, 'Failed to load brackets'));
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const weight: Weight | undefined = useMemo(
+        () => data?.weights.find(w => String(w.weight_id) === weightId) ?? data?.weights[0],
+        [data, weightId],
+    );
 
-        fetchBrackets();
+    // Open tournaments have several divisions, each with its own weights.
+    const divisions = data?.divisions ?? [];
+    const activeDivision = division ?? (weight?.division_id != null ? String(weight.division_id) : null);
+    const weights = (data?.weights ?? []).filter(w =>
+        divisions.length < 2 || activeDivision === null || String(w.division_id) === activeDivision);
+
+    const templates = useMemo(
+        () => data?.templates.filter(t => weight && t.bracket_id === weight.bracket_id) ?? [],
+        [data, weight],
+    );
+
+    useEffect(() => {
+        setTemplate(templates[0] ?? null);
+    }, [templates]);
+
+    const pages = template?.pages.filter(p => p.show_page).map(p => p.page_id).join(',');
+
+    useEffect(() => {
+        if (!weight) return;
+        // Wait for this weight's template, not the previous weight's.
+        if (usesTemplates && (!template || template.bracket_id !== weight.bracket_id)) return;
+        let cancelled = false;
+        setLoading(true);
+        setError(null);
+        const load = usesTemplates
+            ? getBracketHtml(eventType, tourneyId.toString(), weight.weight_id, pages ? pages.split(',').map(Number) : [])
+                .then(h => { if (!cancelled) { setHtml(h); setSheet(null); } })
+            : getBracketSheet(eventType, tourneyId.toString(), weight.bracket_id)
+                .then(s => { if (!cancelled) { setSheet(s); setHtml(null); } });
+        load
+            .catch(err => { if (!cancelled) setError(errorMessage(err, 'Could not load this bracket.')); })
+            .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+    // The template is read through its ids and `pages`, so toggling a page reloads but re-rendering doesn't.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [eventType, tourneyId, usesTemplates]);
+    }, [eventType, tourneyId, weight, usesTemplates, template?.bracket_id, template?.template_id, pages]);
 
-    const handleWeightChange = (weight: Weight) => {
-        setSelectedWeight(weight);
-        const matchingTemplate = bracketData?.templates.find(
-            t => t.bracket_id === weight.bracket_id
+    if (!data) {
+        return error ? (
+            <div className="rounded-lg border border-corner-red/30 bg-white p-4">{error}</div>
+        ) : (
+            <div className="flex items-center gap-3 py-12 text-ink-soft">
+                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> Loading brackets
+            </div>
         );
-        setSelectedTemplate(matchingTemplate || null);
-        setBracketHtml(null);
-        setBracketSheet(null);
-        // FloWrestling brackets need no options beyond the weight, so show them straight away.
-        if (!usesTemplates) loadBracket(weight, null);
-    };
+    }
 
-    const handleTemplateChange = (template: Template) => {
-        setSelectedTemplate(template);
-        setBracketHtml(null);
-    };
-
-    const handlePageToggle = (pageId: number, checked: boolean) => {
-        if (!selectedTemplate) return;
-
-        setSelectedTemplate({
-            ...selectedTemplate,
-            pages: selectedTemplate.pages.map(page =>
-                page.page_id === pageId ? { ...page, show_page: checked } : page
-            )
-        });
-    };
-
-    const loadBracket = async (weight: Weight, template: Template | null) => {
-        try {
-            setLoading(true);
-            setError(null);
-            if (usesTemplates) {
-                if (!template) return;
-                const html = await getBracketHtml(
-                    eventType,
-                    tourneyId.toString(),
-                    weight.weight_id,
-                    template.pages.filter(p => p.show_page).map(p => p.page_id)
-                );
-                setBracketHtml(html);
-            } else {
-                setBracketSheet(await getBracketSheet(eventType, tourneyId.toString(), weight.bracket_id));
-            }
-            setIsMobileMenuOpen(false); // Close mobile menu after viewing
-        } catch (err) {
-            setError(errorMessage(err, 'Failed to load bracket'));
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleViewBracket = () => {
-        if (selectedWeight) loadBracket(selectedWeight, selectedTemplate);
-    };
-
-    if (!bracketData) {
+    if (data.weights.length === 0) {
         return (
-            <div className="flex items-center justify-center h-screen bg-gray-50">
-                <div className="text-center space-y-4">
-                    {error ? (
-                        <div className="p-6 bg-red-50 border border-red-200 rounded-2xl max-w-md mx-auto">
-                            <div className="flex items-center space-x-3 text-red-600">
-                                <AlertCircle size={24} />
-                                <p className="font-medium">{error}</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center space-y-4">
-                            <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-                            <p className="text-gray-600 font-medium">Loading bracket data...</p>
-                        </div>
-                    )}
-                </div>
+            <div className="rounded-lg border border-dashed border-line bg-white px-6 py-12 text-center">
+                <p className="font-display text-xl font-semibold">No brackets yet</p>
+                <p className="mt-1 text-ink-soft">Brackets appear here once the organiser publishes them.</p>
             </div>
         );
     }
 
     return (
         <div>
-            {/* Mobile Header */}
-            <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden h-16 border-b border-gray-200 bg-white flex items-center px-4 fixed bottom-0 left-0 w-full z-10 p-2 hover:bg-gray-100"
-            >
-                <MenuIcon size={24} className="text-gray-600" />
-                <h1 className="ml-3 text-lg font-semibold text-gray-800">Tournament Bracket</h1>
-            </button>
-
-            <div className="flex md:pt-4">
-                <BracketSidebar
-                    bracketData={bracketData}
-                    selectedWeight={selectedWeight}
-                    selectedTemplate={selectedTemplate}
-                    onWeightChange={handleWeightChange}
-                    onTemplateChange={handleTemplateChange}
-                    onPageToggle={handlePageToggle}
-                    onViewClick={handleViewBracket}
-                    isMobileMenuOpen={isMobileMenuOpen}
-                    loading={loading}
-                    onCloseMobile={() => setIsMobileMenuOpen(false)}
-                    usesTemplates={usesTemplates}
-                />
-
-                <div className="flex-1 p-4 pt-0 overflow-auto drop-shadow-md">
-                    <Suspense fallback={
-                        <div className="h-full flex items-center justify-center">
-                            <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-                        </div>
-                    }>
-                        {error && (
-                            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-3 text-red-600">
-                                <AlertCircle size={20} />
-                                <p className="font-medium">{error}</p>
-                            </div>
-                        )}
-                        {!usesTemplates && bracketSheet ? (
-                            <BracketSheetView sheet={bracketSheet} />
-                        ) : !usesTemplates && loading ? (
-                            <div className="h-64 flex items-center justify-center bg-white rounded-xl shadow-sm">
-                                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-                            </div>
-                        ) : usesTemplates && bracketHtml ? (
-                            <div className="h-full rounded-xl overflow-hidden shadow-sm">
-                                <BracketFrame frameInnerHtml={bracketHtml} />
-                            </div>
-                        ) : (
-                            <div className="h-full flex items-center justify-center bg-white rounded-xl shadow-sm p-8">
-                                <div className="text-center space-y-3">
-                                    <div className="bg-gray-50 p-4 rounded-full inline-block">
-                                        <Eye className="w-12 h-12 text-gray-400" />
-                                    </div>
-                                    <p className="text-gray-500 max-w-sm">
-                                        Select your options from the sidebar and click "View Bracket" to display the tournament bracket
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                    </Suspense>
+            {divisions.length > 1 && (
+                <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" role="group" aria-label="Division">
+                    {divisions.map(d => (
+                        <button
+                            key={String(d.division_id)}
+                            type="button"
+                            className="chip"
+                            aria-pressed={activeDivision === String(d.division_id)}
+                            onClick={() => setDivision(String(d.division_id))}
+                        >
+                            {d.division_name}
+                        </button>
+                    ))}
                 </div>
+            )}
+
+            <div role="group" aria-label="Weight class" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+                {weights.map(w => (
+                    <button
+                        key={w.weight_index}
+                        type="button"
+                        aria-pressed={weight?.weight_index === w.weight_index}
+                        onClick={() => setWeightId(String(w.weight_id))}
+                        className={cn('chip min-w-[3.5rem] justify-center font-display text-base font-semibold tabular-nums')}
+                    >
+                        {w.weight_name}
+                    </button>
+                ))}
+            </div>
+
+            {usesTemplates && template && (
+                <LayoutOptions templates={templates} template={template} onTemplate={setTemplate} />
+            )}
+
+            <div className="relative mt-6">
+                {error && <div className="mb-4 rounded-lg border border-corner-red/30 bg-white p-4">{error}</div>}
+                {loading && (sheet || html) && (
+                    <div className="absolute right-3 top-3 z-10 flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm text-ink-soft shadow ring-1 ring-line">
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Loading
+                    </div>
+                )}
+                {sheet ? (
+                    <BracketSheetView sheet={sheet} />
+                ) : html ? (
+                    <div className="overflow-hidden rounded-lg border border-line bg-white">
+                        <BracketFrame frameInnerHtml={html} />
+                    </div>
+                ) : loading ? (
+                    <div className="flex items-center gap-3 py-12 text-ink-soft">
+                        <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> Loading bracket
+                    </div>
+                ) : null}
             </div>
         </div>
     );
